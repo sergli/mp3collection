@@ -42,7 +42,7 @@ class Mp3Tags
 			}
 			break;
 		default:
-			$this->_otherTags[$tag] = $value;
+			$this->_otherTags[$name] = $value;
 			break;
 		}
 

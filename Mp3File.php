@@ -166,7 +166,7 @@ class Mp3File
 			escapeshellarg($this->_file->getPathName()));
 		exec($exec, $output, $retval);
 
-		if ($retval !== 0) {
+		if ($retval !== 0 && $retval !== 1) {
 			return false;
 		}
 
