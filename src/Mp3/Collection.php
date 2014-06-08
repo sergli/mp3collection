@@ -1,7 +1,8 @@
 <?php
 
+namespace Mp3;
 
-class Mp3Collection
+class Collection
 {
 	private $_root;
 	private $_file;
@@ -11,75 +12,93 @@ class Mp3Collection
 
 	private $_time = 0;
 
-	public function getChildren() {
+	public function getChildren()
+	{
 		return $this->_children;
 	}
 
-	public function getTotalTime() {
+	public function getTotalTime()
+	{
 		$time = 0.0;
-		foreach ($this->getChildren() as $child) {
+		foreach ($this->getChildren() as $child)
+		{
 			$time += $child->getTotalTime();
 		}
 		return $time;
 	}
 
-	public function getFile() {
+	public function getFile()
+	{
 		return $this->_file;
 	}
 
-	public function __construct($root, $cutNum = 0) {
+	public function __construct($root, $cutNum = 0)
+	{
 		$this->_root = $root;
-		$this->_file = new SplFileInfo($root);
-		if ($cutNum > 0) {
+		$this->_file = new \SplFileInfo($root);
+		if ($cutNum > 0)
+		{
 			$this->_cutNum = (int) $cutNum;
 		}
 	}
 
-	public function getRoot() {
+	public function getRoot()
+	{
 		return $this->_root;
 	}
 
-	public function hasFile($file) {
+	public function hasFile($file)
+	{
 		$chunk = substr($file, 0, strlen($this->_root));
-		if ($chunk !== $this->_root) {
+		if ($chunk !== $this->_root)
+		{
 			return false;
 		}
 		//	empty file name ?
-		if (strlen($file) === strlen($this->_root)) {
+		if (strlen($file) === strlen($this->_root))
+		{
 			return false;
 		}
 
 		return true;
 	}
 
-	private function getNextRoot($file) {
+	private function getNextRoot($file)
+	{
 		$pos = strpos($file, '/', strlen($this->_root));
-		if (false === $pos) {
+		if (false === $pos)
+		{
 			return false;
 		}
 		return substr($file, 0, $pos + 1);
 	}
 
-	private function _getFilePath(Mp3File $File) {
+	private function _getFilePath(\Mp3\FileInfo $File)
+	{
 		$file_path = $File->file_path;
-		if ($this->_cutNum > 0) {
+		if ($this->_cutNum > 0)
+		{
 			$file_path = preg_replace('@^(/[^/]+){' . $this->_cutNum . '}@', '', $file_path);
 		}
 		return $file_path;
 	}
 
-	public function addFile(Mp3File $File) {
+	public function addFile(\Mp3\FileInfo $File)
+	{
 		$file_path = $this->_getFilePath($File);
 
-		if (!$this->hasFile($file_path)) {
+		if (!$this->hasFile($file_path))
+		{
 			return false;
 		}
 		$nextRoot = $this->getNextRoot($file_path);
-		if (false === $nextRoot) {
+		if (false === $nextRoot)
+		{
 			return $this->_children[$file_path] = $File;
 		}
 
-		if (!isset($this->_children[$nextRoot])) {
+		if (!isset($this->_children[$nextRoot]))
+		{
 			$this->_children[$nextRoot] = new self($nextRoot, $this->_cutNum);
 		}
 		return $this->_children[$nextRoot]->addFile($File);

@@ -1,21 +1,21 @@
 <?php
 
+include 'vendor/autoload.php';
+
 if ($argc < 2) {
 	exit(0);
 }
 
-require_once __DIR__ . '/init.php';
+$pdo = new \PDO('mysql:host=localhost;dbname=music', 'root', '12345', [ PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'	]);
 
-$pdo = new PDO('mysql:host=localhost;dbname=music', 'root', '12345', [ PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'	]);
-
-$DataMapper = new Mp3FileMapper($pdo);
+$Mapper = new \Mp3\FileMapper($pdo);
 
 $files = array_slice($argv, 1);
 
 foreach ($files as $file) {
-	$Mp3 = new Mp3File($file);
+	$Mp3 = new \Mp3\FileInfo($file);
 	$Mp3->readInfo();
-	if (!$DataMapper->save($Mp3)) {
+	if (!$Mapper->save($Mp3)) {
 		printf("ERR: %s\n", $Mp3->getFile()->getPathName());
 	}
 	else {

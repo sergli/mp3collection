@@ -1,28 +1,35 @@
 <?php
 
-class Mp3FileMapper
+namespace Mp3;
+
+class FileMapper
 {
+	/**
+	 * @var \PDO
+	 */
 	private $_pdo;
 
-	public function __construct(PDO $pdo) {
+	public function __construct(\PDO $pdo)
+	{
 		$this->_pdo = $pdo;
-		$this->_pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$this->_pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 	}
 
-	public function save(Mp3File $Mp3File) {
-
+	public function save(\Mp3\FileInfo $FileInfo)
+	{
 		$this->_pdo->beginTransaction();
 
-		$res = $this->_saveFile($Mp3File);
-		if (!$res) {
+		$res = $this->_saveFile($FileInfo);
+		if (!$res)
+		{
 			$this->_pdo->rollBack();
-			throw new Exception(sprintf('Couldnt save file %s', $Mp3File->file_path));
+			throw new Exception(sprintf('Couldnt save file %s', $FileInfo->file_path));
 		}
 
-		$res = $this->_saveTags($Mp3File->getTags());
+		$res = $this->_saveTags($FileInfo->getTags());
 		if (!$res) {
 			$this->_pdo->rollBack();
-			throw new Exception(sprintf('Couldnt save tags for file %s', $Mp3File->file_path));
+			throw new Exception(sprintf('Couldnt save tags for file %s', $FileInfo->file_path));
 		}
 
 		$this->_pdo->commit();
@@ -30,7 +37,8 @@ class Mp3FileMapper
 		return true;
 	}
 
-	public function getAll() {
+	public function getAll()
+	{
 		$sql = '
 		SELECT
 			f.file_id,
@@ -54,29 +62,34 @@ class Mp3FileMapper
 				ON f.file_id = t.file_id';
 		$Files = [];
 		$stmt = $this->_pdo->query($sql);
-		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC))
+		{
 			$Files[] = $this->_createObject($row);
 		}
 
 		return $Files;
 	}
 
-	private function _createObject(array $row) {
+	private function _createObject(array $row)
+	{
 		$other = $row['other'];
 		unset($row['other']);
-		$File = new Mp3File($row['file_path']);
+		$File = new \Mp3\FileInfo($row['file_path']);
 		unset($row['file_path']);
-		foreach ($row as $param => $val) {
+		foreach ($row as $param => $val)
+		{
 			$File->{$param} = $val;
 		}
-		if (!empty($other)) {
+		if (!empty($other))
+		{
 			$other = json_decode($other);
 			$File->other = $other;
 		}
 		return $File;
 	}
 
-	private function _saveFile(Mp3File $File) {
+	private function _saveFile(\Mp3\FileInfo $File)
+	{
 		$sql = '
 		INSERT INTO music.files
 		(
@@ -106,7 +119,8 @@ class Mp3FileMapper
 
 		$res = $stmt->execute($params);
 
-		if (!$res) {
+		if (!$res)
+		{
 			return false;
 		}
 		$File->file_id = $this->_pdo->lastInsertId();
@@ -114,9 +128,11 @@ class Mp3FileMapper
 		return true;
 	}
 
-	private function _prepareParams(array $params) {
+	private function _prepareParams(array $params)
+	{
 		$keys = array_keys($params);
-		$keys = array_map(function($val) {
+		$keys = array_map(function($val)
+		{
 			return ':' . $val;
 		}, $keys);
 		$params = array_combine($keys, $params);
@@ -124,7 +140,8 @@ class Mp3FileMapper
 		return $params;
 	}
 
-	private function _saveTags(Mp3Tags $Tags) {
+	private function _saveTags(\Mp3\Tags $Tags)
+	{
 		$sql = '
 		INSERT INTO music.tags
 		(
@@ -161,7 +178,8 @@ class Mp3FileMapper
 		$params = $this->_prepareParams($params);
 
 		$res = $stmt->execute($params);
-		if (!$res) {
+		if (!$res)
+		{
 			return false;
 		}
 

@@ -1,6 +1,8 @@
 <?php
 
-class Mp3Tags
+namespace Mp3;
+
+class Tags
 {
 	private $_file;
 
@@ -15,47 +17,58 @@ class Mp3Tags
 		'other'		=> [],
 	];
 
-	public function __construct(Mp3File $File) {
+	public function __construct(\Mp3\FileInfo $File) {
 		$this->_file = $File;
 	}
 
-	public function getExternalProvider() {
-		return new EyeD3($this->_file->file_path);
+	public function getExternalProvider()
+	{
+		return new \Mp3\External\EyeD3($this->_file->file_path);
 	}
 
-	public function toArray() {
+	public function toArray()
+	{
 		return $this->_tags +
 			['file_id' => $this->_file->file_id];
 	}
 
-	public function getFile() {
+	public function getFile()
+	{
 		return $this->_file;
 	}
 
-	public function readTags() {
+	public function readTags()
+	{
 		$params = $this->getExternalProvider()->execute();
-		foreach ($params as $param => $value) {
+		foreach ($params as $param => $value)
+		{
 			$this->{$param} = $value;
 		}
 	}
 
-	public function __isset($name) {
+	public function __isset($name)
+	{
 		return array_key_exists($name, $this->_tags);
 	}
 
-	public function __get($name) {
-		if (isset($this->_tags[$name])) {
+	public function __get($name)
+	{
+		if (isset($this->_tags[$name]))
+		{
 			return $this->_tags[$name];
 		}
 		return null;
 	}
 
-	public function __set($name, $value) {
+	public function __set($name, $value)
+	{
 		$name = strtolower($name);
-		if (array_key_exists($name, $this->_tags)) {
+		if (array_key_exists($name, $this->_tags))
+		{
 			$this->_tags[$name] = $value;
 		}
-		else {
+		else
+		{
 			$this->_tags['other'][$name] = $value;
 		}
 	}
