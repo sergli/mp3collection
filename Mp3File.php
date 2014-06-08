@@ -2,163 +2,144 @@
 
 class Mp3File
 {
-	const CBR = 0b00;
-	const VBR = 0b01;
-	const ABR = 0b10;
-
 	const EXEC_MPCK = '/usr/bin/mpck %s';
 	const EXEC_EYED3 = '/usr/bin/eyeD3 --no-color %s';
 
+	/**
+	 * @var SplFileInfo
+	 */
 	private $_file;
+	/**
+	 * @var Mp3Tags
+	 */
+	private $_tags;
 
-	private $_tags = null;
-	private $_time;
-	private $_frames;
-	private $_sampleRate;
-	private $_mpegVersion;
-	private $_layer;
-	private $_bitrate;
-	private $_bType;
-	private $_id;
-
-	public static $bitrateTypes = [
-		self::CBR => 'CBR',
-		self::VBR => 'VBR',
-		self::ABR => 'ABR',
+	private $_params = [
+		'file_id'		=> null,
+		'file_path'		=> null,
+		'time'			=> null,
+		'frames'		=> null,
+		'sample_rate'	=> null,
+		'mpeg_version'	=> null,
+		'layer'			=> null,
+		'bitrate'		=> null,
+		'bitrate_type'	=> null,
 	];
 
-	public function setId($id) {
-		$this->_id = $id;
-	}
-	public function getId() {
-		return $this->_id;
-	}
+
+	public static $bitrateTypes = ['CBR', 'VBR', 'ABR'];
 
 	public function __construct($fileName) {
+		$this->setFile($fileName);
+		$this->_tags = new Mp3Tags($this);
+	}
+
+	public function setFile($fileName) {
+		$this->_params = array_fill_keys(array_keys($this->_params), null);
 		$this->_file = new SplFileInfo($fileName);
-		$this->_tags = new Mp3Tags($this->_file);
-	}
-
-	public function toArray() {
-		return [
-			'file_path'		=> $this->_file->getPathName(),
-			'time'			=> $this->_time,
-			'frames'		=> $this->_frames,
-			'sample_rate'	=> $this->_sampleRate,
-			'mpeg_version'	=> $this->_mpegVersion,
-			'layer'			=> $this->_layer,
-			'bitrate'		=> $this->_bitrate,
-			'bitrate_type'	=> $this->getBitrateType(),
-		];
-	}
-
-	public function getBitrateType() {
-		return self::$bitrateTypes[$this->_bType];
+		$this->_params['file_path'] = $this->_file->getPathName();
 	}
 
 	public function getFile() {
 		return $this->_file;
 	}
 
-	public function setTime($time) {
-		if (!preg_match('@(\d+):(\d+)\.(\d+)@', $time, $matches)) {
-			return false;
+	public function toArray() {
+		return $this->_params;
+	}
+
+
+	private function _setTime($val) {
+		//	time in seconds
+		if (is_numeric($val)) {
+			$this->_params['time'] = (float) $val;
+			return true;
 		}
-		$this->_time = $matches[1] * 60 + $matches[2] + $matches[3] * 0.001;
-		return $this;
-	}
-
-	public function setFrames($frames) {
-		$this->_frames = (int) $frames;
-	}
-
-	public function setSampleRate($sampleRate) {
-		if (!preg_match('@(\d+) Hz@', $sampleRate, $matches)) {
-			return false;
-		}
-		$this->_sampleRate = (int) $matches[1];
-		return $this;
-	}
-
-	public function setMpegVersion($version) {
-		$this->_mpegVersion = $version;
-		return $this;
-	}
-
-	public function setlayer($layer) {
-		$this->_layer = (int) $layer;
-	}
-
-
-	public function setBitrate($bitrate) {
-		if (!preg_match('@(\d+) bps(?: \((VBR|CBR|ABR)\))?@', $bitrate, $matches)) {
-			return false;
+		//	set time from mpck output
+		if (preg_match('@(\d+):(\d+)\.(\d+)@', $val, $matches)) {
+			$this->_params['time'] = $matches[1] * 60 + $matches[2] + $matches[3] * 0.001;
+			return true;
 		}
 
-		$this->_bitrate = (int) $matches[1];
+		return false;
+	}
 
-		$type = !empty($matches[2]) ? $matches[2] : '';
-
-		switch ($type) {
-		case 'VBR':
-			$this->_bType = self::VBR;
-			break;
-		case 'ABR':
-			$this->_bType = self::ABR;
-			break;
-		case 'CBR':
-		default:
-			$this->_bType = self::CBR;
-			break;
+	private function _setSampleRate($val) {
+		if (is_numeric($val)) {
+			$this->_params['sample_rate'] = (int) $val;
+			return true;
 		}
 
-		return $this;
+		if (preg_match('@(\d+) Hz@', $val, $matches)) {
+			$this->_params['sample_rate'] = (int) $matches[1];
+			return true;
+		}
+		return false;
+	}
+
+
+	private function _setBitrate($val) {
+		if (is_numeric($val)) {
+			return $this->_params['bitrate'] = (int) $val;
+		}
+
+		if (preg_match('@(\d+) bps(?: \((VBR|CBR|ABR)\))?@', $val, $matches)) {
+			$this->_params['bitrate'] = (int) $matches[1];
+
+			$type = !empty($matches[2]) ? $matches[2] : 'CBR';
+			if (in_array($type, self::$bitrateTypes)) {
+				$this->_params['bitrate_type'] = $type;
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 
 	public function getTags() {
 		return $this->_tags;
 	}
 
-	public function setTag($tag, $value) {
-		$tag = strtolower($tag);
-		switch ($tag) {
-		case 'artist':
-		case 'album':
-		case 'genre':
-		case 'title':
-		case 'track':
-		case 'year':
-			$this->_tags[$tag] = $value;
-			break;
-		default:
-			$this->_tags['other'][$tag] = $value;
+	public function __get($param) {
+		$param = strtolower($param);
+		if (isset($this->_params[$param])) {
+			return $this->_params[$param];
 		}
+
+		return null;
 	}
 
-	public function setProperty($property, $value) {
-		switch ($property) {
+	public function __set($param, $value) {
+		$param = strtolower($param);
+
+		switch ($param) {
+		case 'file_id':
+			$this->_params['file_id'] = !is_null($param) ? (int) $value : null;
+			break;
 		case 'time':
-			$this->setTime($value);
+			$this->_setTime($value);
 			break;
 		case 'frames':
-			$this->setFrames($value);
+			$this->_params['frames'] = (int) $value;
 			break;
 		case 'samplerate':
-			$this->setSampleRate($value);
+			$this->_setSampleRate($value);
 			break;
 		case 'version':
-			$this->setMpegVersion($value);
+			$this->_params['mpeg_version'] = $value;
 			break;
 		case 'layer':
-			$this->setLayer($value);
+			$this->_params['layer'] = (int) $value;
+			break;
+		case 'bitrate_type':
+			$this->_params['bitrate_type'] = (int) $value;
 			break;
 		}
 
-		if (strpos($property, 'bitrate') !== false) {
-			$this->setBitrate($value);
+		if (strpos($param, 'bitrate') !== false) {
+			$this->_setBitrate($value);
 		}
-
-		return $this;
 	}
 
 	public function readInfo() {
@@ -183,7 +164,7 @@ class Mp3File
 				continue;
 			}
 
-			$this->setProperty($matches[1], $matches[2]);
+			$this->__set($matches[1], $matches[2]);
 		}
 	}
 

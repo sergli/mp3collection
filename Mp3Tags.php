@@ -2,9 +2,10 @@
 
 class Mp3Tags
 {
-	const EXEC_EYED3 = '/usr/bin/eyeD3 --no-color %s';
+	const EXEC_EYED3 = '2>/dev/null /usr/bin/eyeD3 --no-color %s';
 
 	private $_file;
+
 	private $_tags = [
 		'artist'	=> null,
 		'album'		=> null,
@@ -13,12 +14,15 @@ class Mp3Tags
 		'genre'		=> null,
 		'track'		=> null,
 		'tracks'	=> null,
+		'other'		=> null,
 	];
 
-	private $_otherTags = [];
+	public function __construct(Mp3File $File) {
+		$this->_file = $File;
+	}
 
-	public function __construct(SplFileInfo $file) {
-		$this->_file = $file;
+	public function getFile() {
+		return $this->_file;
 	}
 
 	public function __set($name, $value) {
@@ -42,35 +46,38 @@ class Mp3Tags
 			}
 			break;
 		default:
-			$this->_otherTags[$name] = $value;
+			$this->_tags['other'][$name] = $value;
 			break;
 		}
 
 	}
 
 	public function toArray() {
-		$res = $this->_tags;
 
-		if (empty($other)) {
-			$res['other'] = null;
-			return $res;
+		$arr = [
+			'file_id'	=> $this->_file->file_id,
+		];
+
+		$tags = $this->_tags;
+
+		if (isset($tags['other'])) {
+			$other = [];
+			foreach ($tags['other'] as $key => $val) {
+				$other[] = "$key: $val";
+			}
+			$other = implode('|', $other);
+
+			$tags['other'] = $other;
 		}
+		$arr = $tags + $arr;
 
-		$other = [];
-		foreach ($this->_otherTags as $key => $val) {
-			$other[] = "$key: $val";
-		}
-		$other = implode('|', $other);
-
-		$res['other'] = $other;
-
-		return $res;
+		return $arr;
 	}
 
 	public function readTags()
 	{
 		$exec = sprintf(self::EXEC_EYED3,
-			escapeshellarg($this->_file->getPathName()));
+			escapeshellarg($this->_file->file_path));
 		exec($exec, $output, $retval);
 
 		if ($retval !== 0) {

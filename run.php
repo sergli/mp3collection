@@ -19,12 +19,8 @@ foreach ($files as $file) {
 	$Mp3 = new Mp3File($file);
 	$Mp3->readInfo();
 	$Mp3->readTags();
-
-	if (!$DataMapper->saveFile($Mp3)) {
-		printf("ERR	(saveFile): %s\n", $Mp3->getFile()->getFileName());
-	}
-	else if (!$DataMapper->saveTags($Mp3)) {
-		printf("ERR	(saveTags): %s\n", $Mp3->getFile()->getFileName());
+	if (!$DataMapper->save($Mp3)) {
+		printf("ERR: %s\n", $Mp3->getFile()->getPathName());
 	}
 	else {
 		printf("OK	: %s\n", $Mp3->getFile()->getFileName());
