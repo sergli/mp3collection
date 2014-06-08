@@ -10,7 +10,8 @@ class Collection implements \Mp3\Collection\UnitInterface
 
 	private $_children = [];
 
-	private $_time = 0;
+	private $_totalTime = 0;
+	private $_totalFiles = 0;
 
 	public function getChildren()
 	{
@@ -19,22 +20,32 @@ class Collection implements \Mp3\Collection\UnitInterface
 
 	public function getTotalTime()
 	{
-		$time = 0.0;
-		foreach ($this->getChildren() as $child)
+		if ($this->_totalTime == 0)
 		{
-			$time += $child->getTotalTime();
+			$time = 0.0;
+			foreach ($this->getChildren() as $child)
+			{
+				$time += $child->getTotalTime();
+			}
+			$this->_totalTime = $time;
 		}
-		return $time;
+
+		return $this->_totalTime;
 	}
 
 	public function getTotalFiles()
 	{
-		$count = 0;
-		foreach ($this->getChildren() as $child)
+		if ($this->_totalFiles == 0)
 		{
-			$count += $child->getTotalFiles();
+			$count = 0;
+			foreach ($this->getChildren() as $child)
+			{
+				$count += $child->getTotalFiles();
+			}
+			$this->_totalFiles = $count;
 		}
-		return $count;
+
+		return $this->_totalFiles;
 	}
 
 	public function getFile()
