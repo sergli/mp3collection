@@ -38,8 +38,6 @@ class Mp3FileMapper
 			f.time,
 			f.frames,
 			f.sample_rate,
-			f.mpeg_version,
-			f.layer,
 			f.bitrate,
 			f.bitrate_type,
 			t.artist,
@@ -57,20 +55,26 @@ class Mp3FileMapper
 		$Files = [];
 		$stmt = $this->_pdo->query($sql);
 		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-			$File = $this->_createObject($row);
-			if ($File) {
-				$Files[] = $File;
-			}
+			$Files[] = $this->_createObject($row);
 		}
 
 		return $Files;
 	}
 
 	private function _createObject(array $row) {
-
-
+		$other = $row['other'];
+		unset($row['other']);
+		$File = new Mp3File($row['file_path']);
+		unset($row['file_path']);
+		foreach ($row as $param => $val) {
+			$File->{$param} = $val;
+		}
+		if (!empty($other)) {
+			$other = json_decode($other);
+			$File->other = $other;
+		}
+		return $File;
 	}
-
 
 	private function _saveFile(Mp3File $File) {
 		$sql = '
@@ -81,8 +85,6 @@ class Mp3FileMapper
 			time,
 			frames,
 			sample_rate,
-			mpeg_version,
-			layer,
 			bitrate,
 			bitrate_type
 		)
@@ -93,8 +95,6 @@ class Mp3FileMapper
 			:time,
 			:frames,
 			:sample_rate,
-			:mpeg_version,
-			:layer,
 			:bitrate,
 			:bitrate_type
 		)';
@@ -155,6 +155,9 @@ class Mp3FileMapper
 
 		$params = $Tags->getFile()->file_id;
 		$params = $Tags->toArray();
+
+		$params['other'] = empty($params['other']) ? null : json_encode($params['other'], JSON_UNESCAPED_UNICODE);
+
 		$params = $this->_prepareParams($params);
 
 		$res = $stmt->execute($params);

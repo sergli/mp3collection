@@ -1,25 +1,35 @@
 <?php
 
-$file = './2.mp3';
+class A
+{
+}
 
-require_once __DIR__ . '/Mp3File.php';
-require_once __DIR__ . '/Mp3FileMapper.php';
+class Col
+{
+	public function __construct()
+	{
+		foreach (func_get_args() as $arg) {
+			$this->ch[] = $arg;
+		}
+	}
+	public $ch = [];
+}
 
-$Mp3 = new Mp3File($file);
-$Mp3->execMpck();
+$ch1 = new Col(new A, new A);
+$ch2 = new Col(new A);
 
-var_dump($Mp3);
+$Col = new Col;
+$Col->ch[] = new Col(new Col, new Col, new Col($ch1, $ch2));
 
-/*
-$exec = '/usr/bin/eyeD3 --rfc %s';
-$exec = sprintf($exec,
-	escapeshellarg($Mp3->getFile()->getFileName()));
+var_dump($Col);
 
-var_dump(shell_exec($exec));
- */
 
-$pdo = new PDO('mysql:host=localhost;dbname=music', 'root', '12345', [ PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'	]);
+class It extends RecursiveIterator
+{
+	public function __construct(Col $Col)
+	{
+		$this->Col = $Col;
+	}
 
-$DataMapper = new Mp3FileMapper($pdo);
 
-var_dump($DataMapper->saveMp3File($Mp3));
+}
