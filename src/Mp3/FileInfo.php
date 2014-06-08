@@ -2,7 +2,7 @@
 
 namespace Mp3;
 
-class FileInfo
+class FileInfo implements \Mp3\Collection\UnitInterface
 {
 	/**
 	 * @var \SplFileInfo
@@ -31,10 +31,20 @@ class FileInfo
 		return new \Mp3\External\Mpck($this->_file->getPathName());
 	}
 
+	/////////	 UnitInterface	///////////////////////
+
 	public function getTotalTime()
 	{
 		return $this->_params['time'];
 	}
+
+	public function getTotalFiles()
+	{
+		return 1;
+	}
+
+
+	///////////////////////////////////////////////////
 
 	public function __construct($fileName)
 	{

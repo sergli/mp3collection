@@ -13,4 +13,6 @@ foreach ($all as $File) {
 	$Col->addFile($File);
 }
 
-\Mp3\Printer::printCollection($Col);
+
+$Printer = new \Mp3\Printer\Cli($Col);
+$Printer->printCollection();

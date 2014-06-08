@@ -2,7 +2,7 @@
 
 namespace Mp3;
 
-class Collection
+class Collection implements \Mp3\Collection\UnitInterface
 {
 	private $_root;
 	private $_file;
@@ -25,6 +25,16 @@ class Collection
 			$time += $child->getTotalTime();
 		}
 		return $time;
+	}
+
+	public function getTotalFiles()
+	{
+		$count = 0;
+		foreach ($this->getChildren() as $child)
+		{
+			$count += $child->getTotalFiles();
+		}
+		return $count;
 	}
 
 	public function getFile()
