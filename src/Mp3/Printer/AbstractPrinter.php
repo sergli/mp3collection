@@ -4,19 +4,53 @@ namespace Mp3\Printer;
 
 abstract class AbstractPrinter
 {
-	protected $_Collection;
-
-	public function __construct(\Mp3\Collection $Collection)
+	public function run(\Mp3\Collection\UnitInterface $Unit)
 	{
-		$this->_Collection = $Collection;
+		$this->_printHeader();
+
+		$this->printTree($Unit);
+
+		$this->_printFooter();
 	}
 
-	public function printCollection()
+	protected function _printHeader()
 	{
-		$this->_visitAll($this->_Collection);
 	}
 
-	abstract protected function _visitAll($Obj, $level = 0);
+	protected function _printFooter()
+	{
+	}
+
+	public function printTree(\Mp3\Collection\UnitInterface $Unit, $level = 0)
+	{
+		if ($Unit instanceof \Mp3\Collection)
+		{
+			$this->_printBeforeCollection($Unit, $level);
+
+			$children = $Unit->getChildren();
+
+			ksort($children);
+
+			foreach ($children as $child) {
+				$this->printTree($child, $level + 1);
+			}
+
+			$this->_printAfterCollection($Unit, $level);
+		}
+		else
+		{
+			$this->_printFile($Unit, $level);
+		}
+	}
+
+	abstract protected function _printBeforeCollection(\Mp3\Collection $Collection, $level);
+
+	protected function _printAfterCollection(\Mp3\Collection $Collection, $level)
+	{
+		return;
+	}
+
+	abstract protected function _printFile(\Mp3\FileInfo $File, $level);
 
 	public static function formatTime($s)
 	{
@@ -41,5 +75,31 @@ abstract class AbstractPrinter
 		}
 	}
 
+	public static function formatBitrate($val)
+	{
+		$result = [];
+
+		foreach ($val as $type => $rates) {
+			if ($type == 'CBR') {
+				$type = '';
+			}
+			else {
+				$type .= ' ';
+			}
+			if (!empty($rates)) {
+				$rates = array_keys($rates);
+				$min = min($rates) / 1000;
+				$max = max($rates) / 1000;
+				if ($min == $max) {
+					$result[$type] = sprintf('%s%d kbps', $type, $min);
+				}
+				else {
+					$result[$type] = sprintf('%s%d - %d Kbps', $type, $min, $max);
+				}
+			}
+		}
+
+		return implode(', ', $result);
+	}
 }
 

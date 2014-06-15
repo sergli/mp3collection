@@ -14,5 +14,5 @@ foreach ($all as $File) {
 }
 
 
-$Printer = new \Mp3\Printer\Cli($Col);
-$Printer->printCollection();
+$Printer = new \Mp3\Printer\Forum();
+$Printer->run($Col);

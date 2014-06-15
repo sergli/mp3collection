@@ -4,34 +4,35 @@ namespace Mp3\Printer;
 
 class Cli extends \Mp3\Printer\AbstractPrinter
 {
-	protected function _visitAll($Obj, $level = 0)
+	protected function _printCollection(\Mp3\Collection $Collection, $level)
 	{
-		echo str_repeat("\t", $level);
+		$fmt = str_repeat("\t", $level);
 
-		if ($Obj instanceof \Mp3\Collection)
+		$params = [
+			$Collection->getName(),
+			self::formatTime($Collection->getTotalTime()),
+			$Collection->getTotalFiles(),
+		];
+
+		$fmt .= '[[[ %s (time: %s, files: %d';
+		if ($Collection->isAlbum())
 		{
-			$children = $Obj->getChildren();
-
-			printf("[[[ %s (time: %s, files: %d) ]]]\n",
-				$Obj->getFile()->getBaseName(),
-				self::formatTime($Obj->getTotalTime()),
-				$Obj->getTotalFiles(),
-				count($children)
-			);
-
-			ksort($children, SORT_STRING);
-
-			foreach ($children as $child)
-			{
-				$this->_visitAll($child, $level + 1);
-			}
+			$fmt .= ', %s';
+			$params[] = self::formatBitrate($Collection->getTotalBitrates());
 		}
-		else
-		{
-			printf("%s (%s)\n",
-				$Obj->getFile()->getBasename('.mp3'),
-				self::formatTime($Obj->getTotalTime())
-			);
-		}
+		$fmt .= ') ]]]' . "\n";
+
+		vprintf($fmt, $params);
+	}
+
+	protected function _printFile(\Mp3\FileInfo $File, $level)
+	{
+		$fmt = str_repeat("\t", $level);
+		$fmt .= '%s (%s)' . "\n";
+		$params = [
+			$File->getName(),
+			self::formatTime($File->getTotalTime()),
+		];
+		vprintf($fmt, $params);
 	}
 }
