@@ -48,6 +48,43 @@ class Collection implements \Mp3\Collection\UnitInterface
 		return $this->_totalFiles;
 	}
 
+	public function getTotalYears()
+	{
+		$res = [];
+		foreach ($this->getChildren() as $child)
+		{
+			$res += $child->getTotalYears();
+		}
+		return $res;
+	}
+
+	public function getName()
+	{
+		return $this->_file->getBaseName();
+	}
+
+	public function isAlbum()
+	{
+		return !array_filter($this->getChildren(), function($val)
+		{
+			return $val instanceof \Mp3\Collection;
+		});
+	}
+
+	public function getTotalBitrates()
+	{
+		$result = ['CBR' => [], 'VBR' => []];
+
+		foreach ($this->getChildren() as $child)
+		{
+			foreach ($child->getTotalBitrates() as $type => $rates) {
+				$result[$type] += $rates;
+			}
+		}
+
+		return $result;
+	}
+
 	public function getFile()
 	{
 		return $this->_file;

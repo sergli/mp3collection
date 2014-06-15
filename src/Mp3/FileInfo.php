@@ -43,6 +43,27 @@ class FileInfo implements \Mp3\Collection\UnitInterface
 		return 1;
 	}
 
+	public function getTotalBitrates()
+	{
+		return [
+			$this->_params['bitrate_type'] => [
+				$this->_params['bitrate'] => true,
+			]
+		];
+	}
+
+	public function getTotalYears()
+	{
+		return [
+			$this->_tags->year => true,
+		];
+	}
+
+	public function getName()
+	{
+		return $this->getFile()->getBaseName('.mp3');
+	}
+
 
 	///////////////////////////////////////////////////
 
