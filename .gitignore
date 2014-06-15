@@ -1,1 +1,5 @@
 vendor
+*.mp3
+*.wav
+test.php
+*.txt
