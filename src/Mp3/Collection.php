@@ -2,6 +2,8 @@
 
 namespace Mp3;
 
+mb_internal_encoding('utf-8');
+
 class Collection implements \Mp3\Collection\UnitInterface
 {
 	private $_root;
