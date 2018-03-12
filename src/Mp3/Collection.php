@@ -109,7 +109,7 @@ class Collection implements \Mp3\Collection\UnitInterface
 
 	public function hasFile($file)
 	{
-		$chunk = substr($file, 0, strlen($this->_root));
+		$chunk = mb_substr($file, 0, mb_strlen($this->_root));
 		if ($chunk !== $this->_root)
 		{
 			return false;
@@ -125,12 +125,12 @@ class Collection implements \Mp3\Collection\UnitInterface
 
 	private function getNextRoot($file)
 	{
-		$pos = strpos($file, '/', strlen($this->_root));
+		$pos = strpos($file, '/', mb_strlen($this->_root));
 		if (false === $pos)
 		{
 			return false;
 		}
-		return substr($file, 0, $pos + 1);
+		return mb_substr($file, 0, $pos + 1);
 	}
 
 	private function _getFilePath(\Mp3\FileInfo $File)
@@ -146,7 +146,6 @@ class Collection implements \Mp3\Collection\UnitInterface
 	public function addFile(\Mp3\FileInfo $File)
 	{
 		$file_path = $this->_getFilePath($File);
-
 		if (!$this->hasFile($file_path))
 		{
 			return false;
