@@ -9,6 +9,7 @@ if ($argc < 2) {
 $pdo = new \PDO('mysql:host=localhost;dbname=music', 'root', '12345', [ PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'	]);
 
 $Mapper = new \Mp3\FileMapper($pdo);
+$Mapper->truncateAll();
 
 $files = array_slice($argv, 1);
 

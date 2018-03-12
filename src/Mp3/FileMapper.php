@@ -37,6 +37,12 @@ class FileMapper
 		return true;
 	}
 
+	public function truncateAll()
+	{
+		$sql = 'DELETE FROM music.files;';
+		return $this->_pdo->query($sql);
+	}
+
 	public function getAll()
 	{
 		$sql = '
