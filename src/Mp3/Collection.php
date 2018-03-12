@@ -96,6 +96,9 @@ class Collection implements \Mp3\Collection\UnitInterface
 	{
 		$this->_root = $root;
 		$this->_file = new \SplFileInfo($root);
+		if ($this->_file->isDir()) {
+			$this->_root = rtrim($this->_root, '/') . '/';
+		}
 		if ($cutNum > 0)
 		{
 			$this->_cutNum = (int) $cutNum;
@@ -125,12 +128,12 @@ class Collection implements \Mp3\Collection\UnitInterface
 
 	private function getNextRoot($file)
 	{
-		$pos = strpos($file, '/', mb_strlen($this->_root));
+		$pos = strpos($file, '/', strlen($this->_root));
 		if (false === $pos)
 		{
 			return false;
 		}
-		return mb_substr($file, 0, $pos + 1);
+		return substr($file, 0, $pos + 1);
 	}
 
 	private function _getFilePath(\Mp3\FileInfo $File)
